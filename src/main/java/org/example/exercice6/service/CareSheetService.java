@@ -1,101 +1,53 @@
 package org.example.exercice6.service;
 
 import org.example.exercice6.model.CareSheet;
-import org.example.exercice6.repository.CareSheetRepository;
-
-import java.sql.*;
-import java.util.ArrayList;
+import org.example.exercice6.util.HibernateSession;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import java.util.List;
 
-public class CareSheetService implements CareSheetRepository {
+public class CareSheetService {
 
-    private final String url = "jdbc:mysql://localhost:3306/hopital";
-    private final String user = "root";
-    private final String password = "password";
-
-    @Override
     public void save(CareSheet careSheet) {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "INSERT INTO fichesDeSoin (content, consultationId) VALUES (?, ?)";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, careSheet.getContent());
-                statement.setInt(2, careSheet.getConsultationId());
-                statement.executeUpdate();
+        Transaction transaction = null;
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.saveOrUpdate(careSheet);
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
             }
-        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    @Override
     public CareSheet findById(int id) {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "SELECT * FROM fichesDeSoin WHERE id = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setInt(1, id);
-                try (ResultSet resultSet = statement.executeQuery()) {
-                    if (resultSet.next()) {
-                        return new CareSheet(
-                                resultSet.getInt("id"),
-                                resultSet.getString("content"),
-                                resultSet.getInt("consultationId")
-                        );
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            return session.get(CareSheet.class, id);
         }
-        return null;
     }
 
-    @Override
-    public List<CareSheet> findByConsultationId(int consultationId) {
-        List<CareSheet> fichesDeSoin = new ArrayList<>();
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "SELECT * FROM fichesDeSoin WHERE consultationId = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setInt(1, consultationId);
-                try (ResultSet resultSet = statement.executeQuery()) {
-                    while (resultSet.next()) {
-                        fichesDeSoin.add(new CareSheet(
-                                resultSet.getInt("id"),
-                                resultSet.getString("content"),
-                                resultSet.getInt("consultationId")
-                        ));
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+    public List<CareSheet> findAll() {
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            return session.createQuery("from CareSheet", CareSheet.class).list();
         }
-        return fichesDeSoin;
     }
 
-    @Override
     public void update(CareSheet careSheet) {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "UPDATE fichesDeSoin SET content = ?, consultationId = ? WHERE id = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, careSheet.getContent());
-                statement.setInt(2, careSheet.getConsultationId());
-                statement.setInt(3, careSheet.getId());
-                statement.executeUpdate();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        save(careSheet);
     }
 
-    @Override
-    public void delete(int id) {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "DELETE FROM fichesDeSoin WHERE id = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setInt(1, id);
-                statement.executeUpdate();
+    public void delete(CareSheet careSheet) {
+        Transaction transaction = null;
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.delete(careSheet);
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
             }
-        } catch (SQLException e) {
             e.printStackTrace();
         }
     }

@@ -22,7 +22,6 @@ public class LoginServlet extends HttpServlet {
         String username = req.getParameter("username");
         String password = req.getParameter("password");
 
-        // Validation des identifiants
         if ("admin".equals(username) && "root".equals(password)) {
             HttpSession session = req.getSession();
             session.setAttribute("user", username);

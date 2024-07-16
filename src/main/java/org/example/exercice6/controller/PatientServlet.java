@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 
 @WebServlet(name = "patientServlet", value = "/patient/add")
@@ -49,20 +50,8 @@ public class PatientServlet extends HttpServlet {
 
         String firstName = req.getParameter("firstName");
         String lastName = req.getParameter("lastName");
-        String birthDateString = req.getParameter("birthDate");
+        LocalDate birthDate = LocalDate.parse(req.getParameter("birthDate"));
         Part photoPart = req.getPart("photo");
-
-        System.out.println("firstName: " + firstName);
-        System.out.println("lastName: " + lastName);
-        System.out.println("birthDateString: " + birthDateString);
-
-        if (firstName == null || lastName == null || birthDateString == null || firstName.isEmpty() || lastName.isEmpty() || birthDateString.isEmpty()) {
-            // Gérer le cas où l'un des champs requis est vide ou nul
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tous les champs sont obligatoires.");
-            return;
-        }
-
-        LocalDate birthDate = LocalDate.parse(birthDateString);
 
         String photoPath = null;
         if (photoPart != null && photoPart.getSize() > 0) {

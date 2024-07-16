@@ -10,15 +10,15 @@
     <form action="${pageContext.request.contextPath}/patient/add" method="post" enctype="multipart/form-data">
         <div class="mb-3">
             <label for="nom" class="form-label">Nom :</label>
-            <input type="text" class="form-control" id="nom" name="nom" required>
+            <input type="text" class="form-control" id="nom" name="lastName" required>
         </div>
         <div class="mb-3">
             <label for="prenom" class="form-label">Prénom :</label>
-            <input type="text" class="form-control" id="prenom" name="prenom" required>
+            <input type="text" class="form-control" id="prenom" name="firstName" required>
         </div>
         <div class="mb-3">
             <label for="dateNaissance" class="form-label">Date de naissance :</label>
-            <input type="date" class="form-control" id="dateNaissance" name="dateNaissance" required>
+            <input type="date" class="form-control" id="dateNaissance" name="birthDate" required>
         </div>
         <div class="mb-3">
             <label for="photo" class="form-label">Photo :</label>

@@ -1,150 +1,61 @@
 package org.example.exercice6.service;
 
 import org.example.exercice6.model.Patient;
-import org.example.exercice6.repository.PatientRepository;
-
-import java.sql.*;
-import java.util.ArrayList;
+import org.example.exercice6.util.HibernateSession;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import java.util.List;
 
-public class PatientService implements PatientRepository {
+public class PatientService {
 
-    private final String url = "jdbc:mysql://localhost:3306/hopital";
-    private final String user = "root";
-    private final String password = "password";
-
-    @Override
     public void save(Patient patient) {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "INSERT INTO patients (firstName, lastName, birthDate, photoPath, phone) VALUES (?, ?, ?, ?, ?)";
-            try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-                statement.setString(1, patient.getFirstName());
-                statement.setString(2, patient.getLastName());
-                statement.setDate(3, Date.valueOf(patient.getBirthDate()));
-                statement.setString(4, patient.getPhotoPath());
-                statement.setString(5, patient.getPhone());
-                statement.executeUpdate();
-
-                ResultSet generatedKeys = statement.getGeneratedKeys();
-                if (generatedKeys.next()) {
-                    patient.setId(generatedKeys.getInt(1));
-                }
+        Transaction transaction = null;
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.saveOrUpdate(patient);
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
             }
-        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    @Override
     public Patient findById(int id) {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "SELECT * FROM patients WHERE id = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setInt(1, id);
-                try (ResultSet resultSet = statement.executeQuery()) {
-                    if (resultSet.next()) {
-                        return new Patient(
-                                resultSet.getInt("id"),
-                                resultSet.getString("firstName"),
-                                resultSet.getString("lastName"),
-                                resultSet.getDate("birthDate").toLocalDate(),
-                                resultSet.getString("photoPath"),
-                                resultSet.getString("phone"),
-                                null // consultations à charger séparément
-                        );
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            return session.get(Patient.class, id);
         }
-        return null;
     }
 
-    @Override
     public List<Patient> findAll() {
-        List<Patient> patients = new ArrayList<>();
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "SELECT * FROM patients";
-            try (Statement statement = connection.createStatement()) {
-                try (ResultSet resultSet = statement.executeQuery(sql)) {
-                    while (resultSet.next()) {
-                        patients.add(new Patient(
-                                resultSet.getInt("id"),
-                                resultSet.getString("firstName"),
-                                resultSet.getString("lastName"),
-                                resultSet.getDate("birthDate").toLocalDate(),
-                                resultSet.getString("photoPath"),
-                                resultSet.getString("phone"),
-                                null // consultations à charger séparément
-                        ));
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            return session.createQuery("from Patient", Patient.class).list();
         }
-        return patients;
     }
 
-    @Override
     public List<Patient> findByName(String name) {
-        List<Patient> patients = new ArrayList<>();
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "SELECT * FROM patients WHERE lastName LIKE ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, "%" + name + "%");
-                try (ResultSet resultSet = statement.executeQuery()) {
-                    while (resultSet.next()) {
-                        patients.add(new Patient(
-                                resultSet.getInt("id"),
-                                resultSet.getString("firstName"),
-                                resultSet.getString("lastName"),
-                                resultSet.getDate("birthDate").toLocalDate(),
-                                resultSet.getString("photoPath"),
-                                resultSet.getString("phone"),
-                                null // consultations à charger séparément
-                        ));
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            return session.createQuery("from Patient where lastName like :name", Patient.class)
+                    .setParameter("name", "%" + name + "%").list();
         }
-        return patients;
     }
 
-    @Override
     public void update(Patient patient) {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "UPDATE patients SET firstName = ?, lastName = ?, birthDate = ?, photoPath = ?, phone = ? WHERE id = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, patient.getFirstName());
-                statement.setString(2, patient.getLastName());
-                statement.setDate(3, Date.valueOf(patient.getBirthDate()));
-                statement.setString(4, patient.getPhotoPath());
-                statement.setString(5, patient.getPhone());
-                statement.setInt(6, patient.getId());
-                statement.executeUpdate();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        save(patient);
     }
 
-    @Override
-    public void delete(int id) {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "DELETE FROM patients WHERE id = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setInt(1, id);
-                statement.executeUpdate();
+    public void delete(Patient patient) {
+        Transaction transaction = null;
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.delete(patient);
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
             }
-        } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    public void savePatient(Patient patient) {
     }
 }

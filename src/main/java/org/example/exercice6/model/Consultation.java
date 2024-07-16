@@ -1,27 +1,39 @@
 package org.example.exercice6.model;
 
+import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
 
+@Entity
+@Table(name = "consultations")
 public class Consultation {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
     private LocalDate date;
     private String doctorName;
-    private int patientId;
+
+    @ManyToOne
+    @JoinColumn(name = "patient_id", nullable = false)
+    private Patient patient;
+
+    @OneToMany(mappedBy = "consultation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Prescription> prescriptions;
+
+    @OneToMany(mappedBy = "consultation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CareSheet> careSheets;
 
-    // Constructors
     public Consultation() {}
 
-    public Consultation(int id, LocalDate date, String doctorName, int patientId) {
+    public Consultation(int id, LocalDate date, String doctorName, Patient patient) {
         this.id = id;
         this.date = date;
         this.doctorName = doctorName;
-        this.patientId = patientId;
+        this.patient = patient;
     }
 
-    // Getters and Setters
     public int getId() {
         return id;
     }
@@ -46,12 +58,12 @@ public class Consultation {
         this.doctorName = doctorName;
     }
 
-    public int getPatientId() {
-        return patientId;
+    public Patient getPatient() {
+        return patient;
     }
 
-    public void setPatientId(int patientId) {
-        this.patientId = patientId;
+    public void setPatient(Patient patient) {
+        this.patient = patient;
     }
 
     public List<Prescription> getPrescriptions() {

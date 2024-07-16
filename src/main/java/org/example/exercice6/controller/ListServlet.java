@@ -24,12 +24,10 @@ public class ListServlet extends HttpServlet {
     }
 
     private List<Patient> getAllPatients() {
-        // Récupérer la liste de tous les patients (à implémenter)
         return null;
     }
 
     private List<Patient> searchPatients(String search) {
-        // Récupérer la liste des patients correspondant à la recherche (à implémenter)
         return null;
     }
 }

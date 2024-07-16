@@ -1,105 +1,60 @@
 package org.example.exercice6.service;
 
 import org.example.exercice6.model.Consultation;
-import org.example.exercice6.repository.ConsultationRepository;
-
-import java.sql.*;
-import java.util.ArrayList;
+import org.example.exercice6.util.HibernateSession;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import java.util.List;
 
-public class ConsultationService implements ConsultationRepository {
+public class ConsultationService {
 
-    private final String url = "jdbc:mysql://localhost:3306/hopital";
-    private final String user = "root";
-    private final String password = "password";
-
-    @Override
     public void save(Consultation consultation) {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "INSERT INTO consultations (date, doctorName, patientId) VALUES (?, ?, ?)";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setDate(1, Date.valueOf(consultation.getDate()));
-                statement.setString(2, consultation.getDoctorName());
-                statement.setInt(3, consultation.getPatientId());
-                statement.executeUpdate();
+        Transaction transaction = null;
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.saveOrUpdate(consultation);
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
             }
-        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    @Override
     public Consultation findById(int id) {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "SELECT * FROM consultations WHERE id = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setInt(1, id);
-                try (ResultSet resultSet = statement.executeQuery()) {
-                    if (resultSet.next()) {
-                        return new Consultation(
-                                resultSet.getInt("id"),
-                                resultSet.getDate("date").toLocalDate(),
-                                resultSet.getString("doctorName"),
-                                resultSet.getInt("patientId")
-                        );
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            return session.get(Consultation.class, id);
         }
-        return null;
     }
 
-    @Override
-    public List<Consultation> findByPatientId(int patientId) {
-        List<Consultation> consultations = new ArrayList<>();
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "SELECT * FROM consultations WHERE patientId = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setInt(1, patientId);
-                try (ResultSet resultSet = statement.executeQuery()) {
-                    while (resultSet.next()) {
-                        consultations.add(new Consultation(
-                                resultSet.getInt("id"),
-                                resultSet.getDate("date").toLocalDate(),
-                                resultSet.getString("doctorName"),
-                                resultSet.getInt("patientId")
-                        ));
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+    public List<Consultation> findAll() {
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            return session.createQuery("from Consultation", Consultation.class).list();
         }
-        return consultations;
     }
 
-    @Override
+    public List<Consultation> findByDoctorName(String doctorName) {
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            return session.createQuery("from Consultation where doctorName like :doctorName", Consultation.class)
+                    .setParameter("doctorName", "%" + doctorName + "%").list();
+        }
+    }
+
     public void update(Consultation consultation) {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "UPDATE consultations SET date = ?, doctorName = ?, patientId = ? WHERE id = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setDate(1, Date.valueOf(consultation.getDate()));
-                statement.setString(2, consultation.getDoctorName());
-                statement.setInt(3, consultation.getPatientId());
-                statement.setInt(4, consultation.getId());
-                statement.executeUpdate();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        save(consultation);
     }
 
-    @Override
-    public void delete(int id) {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "DELETE FROM consultations WHERE id = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setInt(1, id);
-                statement.executeUpdate();
+    public void delete(Consultation consultation) {
+        Transaction transaction = null;
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.delete(consultation);
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
             }
-        } catch (SQLException e) {
             e.printStackTrace();
         }
     }

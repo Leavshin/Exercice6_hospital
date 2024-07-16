@@ -34,9 +34,6 @@ public class ConsultationServlet extends HttpServlet {
 
     private void showConsultationDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         int consultationId = Integer.parseInt(req.getParameter("id"));
-
-        // Récupérer les détails de la consultation (à implémenter)
-
         req.getRequestDispatcher("/WEB-INF/consultation/detail.jsp").forward(req, resp);
     }
 
@@ -63,27 +60,18 @@ public class ConsultationServlet extends HttpServlet {
         int patientId = Integer.parseInt(req.getParameter("patientId"));
         String doctorName = req.getParameter("doctorName");
         LocalDate consultationDate = LocalDate.parse(req.getParameter("consultationDate"));
-
-        // Ajouter la consultation (à implémenter)
-
         resp.sendRedirect(req.getContextPath() + "/patient/detail?id=" + patientId);
     }
 
     private void addPrescription(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         int consultationId = Integer.parseInt(req.getParameter("consultationId"));
         String prescriptionContent = req.getParameter("prescriptionContent");
-
-        // Ajouter la prescription (à implémenter)
-
         resp.sendRedirect(req.getContextPath() + "/consultation/detail?id=" + consultationId);
     }
 
     private void addFicheDeSoin(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         int consultationId = Integer.parseInt(req.getParameter("consultationId"));
         String ficheDeSoinContent = req.getParameter("ficheDeSoinContent");
-
-        // Ajouter la fiche de soin (à implémenter)
-
         resp.sendRedirect(req.getContextPath() + "/consultation/detail?id=" + consultationId);
     }
 }

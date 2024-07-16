@@ -1,101 +1,53 @@
 package org.example.exercice6.service;
 
 import org.example.exercice6.model.Prescription;
-import org.example.exercice6.repository.PrescriptionRepository;
-
-import java.sql.*;
-import java.util.ArrayList;
+import org.example.exercice6.util.HibernateSession;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import java.util.List;
 
-public class PrescriptionService implements PrescriptionRepository {
+public class PrescriptionService {
 
-    private final String url = "jdbc:mysql://localhost:3306/hopital";
-    private final String user = "root";
-    private final String password = "password";
-
-    @Override
     public void save(Prescription prescription) {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "INSERT INTO prescriptions (content, consultationId) VALUES (?, ?)";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, prescription.getContent());
-                statement.setInt(2, prescription.getConsultationId());
-                statement.executeUpdate();
+        Transaction transaction = null;
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.saveOrUpdate(prescription);
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
             }
-        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    @Override
     public Prescription findById(int id) {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "SELECT * FROM prescriptions WHERE id = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setInt(1, id);
-                try (ResultSet resultSet = statement.executeQuery()) {
-                    if (resultSet.next()) {
-                        return new Prescription(
-                                resultSet.getInt("id"),
-                                resultSet.getString("content"),
-                                resultSet.getInt("consultationId")
-                        );
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            return session.get(Prescription.class, id);
         }
-        return null;
     }
 
-    @Override
-    public List<Prescription> findByConsultationId(int consultationId) {
-        List<Prescription> prescriptions = new ArrayList<>();
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "SELECT * FROM prescriptions WHERE consultationId = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setInt(1, consultationId);
-                try (ResultSet resultSet = statement.executeQuery()) {
-                    while (resultSet.next()) {
-                        prescriptions.add(new Prescription(
-                                resultSet.getInt("id"),
-                                resultSet.getString("content"),
-                                resultSet.getInt("consultationId")
-                        ));
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+    public List<Prescription> findAll() {
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            return session.createQuery("from Prescription", Prescription.class).list();
         }
-        return prescriptions;
     }
 
-    @Override
     public void update(Prescription prescription) {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "UPDATE prescriptions SET content = ?, consultationId = ? WHERE id = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, prescription.getContent());
-                statement.setInt(2, prescription.getConsultationId());
-                statement.setInt(3, prescription.getId());
-                statement.executeUpdate();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        save(prescription);
     }
 
-    @Override
-    public void delete(int id) {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            String sql = "DELETE FROM prescriptions WHERE id = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setInt(1, id);
-                statement.executeUpdate();
+    public void delete(Prescription prescription) {
+        Transaction transaction = null;
+        try (Session session = HibernateSession.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.delete(prescription);
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
             }
-        } catch (SQLException e) {
             e.printStackTrace();
         }
     }

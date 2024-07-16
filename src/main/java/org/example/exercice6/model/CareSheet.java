@@ -1,20 +1,29 @@
 package org.example.exercice6.model;
 
-public class CareSheet {
-    private int id;
-    private String content;
-    private int consultationId;
+import jakarta.persistence.*;
 
-    // Constructors
+@Entity
+@Table(name = "care_sheets")
+public class CareSheet {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    private String content;
+
+    @ManyToOne
+    @JoinColumn(name = "consultation_id", nullable = false)
+    private Consultation consultation;
+
     public CareSheet() {}
 
-    public CareSheet(int id, String content, int consultationId) {
+    public CareSheet(int id, String content, Consultation consultation) {
         this.id = id;
         this.content = content;
-        this.consultationId = consultationId;
+        this.consultation = consultation;
     }
 
-    // Getters and Setters
     public int getId() {
         return id;
     }
@@ -31,11 +40,11 @@ public class CareSheet {
         this.content = content;
     }
 
-    public int getConsultationId() {
-        return consultationId;
+    public Consultation getConsultation() {
+        return consultation;
     }
 
-    public void setConsultationId(int consultationId) {
-        this.consultationId = consultationId;
+    public void setConsultation(Consultation consultation) {
+        this.consultation = consultation;
     }
 }
