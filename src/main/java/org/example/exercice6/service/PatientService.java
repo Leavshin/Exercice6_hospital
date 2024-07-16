@@ -17,13 +17,18 @@ public class PatientService implements PatientRepository {
     public void save(Patient patient) {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql = "INSERT INTO patients (firstName, lastName, birthDate, photoPath, phone) VALUES (?, ?, ?, ?, ?)";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 statement.setString(1, patient.getFirstName());
                 statement.setString(2, patient.getLastName());
                 statement.setDate(3, Date.valueOf(patient.getBirthDate()));
                 statement.setString(4, patient.getPhotoPath());
                 statement.setString(5, patient.getPhone());
                 statement.executeUpdate();
+
+                ResultSet generatedKeys = statement.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    patient.setId(generatedKeys.getInt(1));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -138,5 +143,8 @@ public class PatientService implements PatientRepository {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public void savePatient(Patient patient) {
     }
 }

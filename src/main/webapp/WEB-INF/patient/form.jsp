@@ -7,7 +7,7 @@
 <body>
 <div class="container mt-5">
     <h1>Ajouter un patient</h1>
-    <form action="${pageContext.request.contextPath}/addPatient" method="post" enctype="multipart/form-data">
+    <form action="${pageContext.request.contextPath}/patient/add" method="post" enctype="multipart/form-data">
         <div class="mb-3">
             <label for="nom" class="form-label">Nom :</label>
             <input type="text" class="form-control" id="nom" name="nom" required>
